@@ -1,0 +1,210 @@
+{% extends 'hms/base.html' %}
+
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+    .panel-title {
+        font-family: var(--font-heading);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 0.75rem;
+    }
+    .doctor-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: var(--transition);
+    }
+    .doctor-item:hover, .doctor-item.active {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: var(--primary);
+    }
+    .doctor-name {
+        font-weight: 600;
+    }
+    .doctor-email {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .slot-btn {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+        padding: 1rem;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        transition: var(--transition);
+        text-align: center;
+        width: 100%;
+    }
+    .slot-btn:hover {
+        background: var(--success);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .slot-date {
+        font-size: 0.8rem;
+        font-weight: 500;
+        opacity: 0.8;
+    }
+    .slot-time {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+    .bookings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    .booking-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-sm);
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .booking-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .booking-doctor {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--primary);
+    }
+    .booking-time {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+    }
+    .booking-date {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    .badge {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    @media (max-width: 900px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Left Column: Doctor Selection & Booking Records -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <div class="card">
+            <h3 class="panel-title">👨‍⚕️ Select a Doctor</h3>
+            {% if doctors %}
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 0.25rem;">
+                    {% for doc in doctors %}
+                        <a href="?doctor_id={{ doc.id }}" class="doctor-item {% if selected_doctor and selected_doctor.id == doc.id %}active{% endif %}">
+                            <div>
+                                <div class="doctor-name">Dr. {{ doc.get_full_name|default:doc.username }}</div>
+                                <div class="doctor-email">{{ doc.email }}</div>
+                            </div>
+                            <span style="font-size: 1.25rem;">➔</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">No doctors registered yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3 class="panel-title">📝 Your Bookings</h3>
+            {% if bookings %}
+                <div class="bookings-list">
+                    {% for booking in bookings %}
+                        <div class="booking-card">
+                            <div class="booking-info">
+                                <span class="booking-doctor">Dr. {{ booking.slot.doctor.get_full_name|default:booking.slot.doctor.username }}</span>
+                                <span class="booking-time">⏰ {{ booking.slot.start_time|time:"H:i" }} - {{ booking.slot.end_time|time:"H:i" }}</span>
+                                <span class="booking-date">📅 {{ booking.slot.date|date:"F d, Y" }}</span>
+                            </div>
+                            <div>
+                                <span class="badge">Confirmed</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-secondary); font-size: 0.95rem;">You have not booked any appointments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Available Slots Grid -->
+    <div class="card">
+        {% if selected_doctor %}
+            <h3 class="panel-title">Available Slots with Dr. {{ selected_doctor.get_full_name|default:selected_doctor.username }}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Click on any slot below to book your appointment immediately.</p>
+            
+            {% if available_slots %}
+                <div class="slots-grid">
+                    {% for slot in available_slots %}
+                        <form method="post" action="{% url 'book_slot' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                            <button type="submit" class="slot-btn">
+                                <span class="slot-date">{{ slot.date|date:"l, M d" }}</span>
+                                <span class="slot-time">{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</span>
+                                <span style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.8;">⚡ Book Slot</span>
+                            </button>
+                        </form>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 2rem;">No upcoming availability slots listed for this doctor.</p>
+            {% endif %}
+        {% else %}
+            <h3 class="panel-title">Appointment Booking</h3>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 2rem; text-align: center;">
+                👈 Please select a doctor from the list on the left to view their available time slots.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends 'hms/base.html' %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block extra_head %}
+<style>
+    .auth-wrapper {
+        max-width: 500px;
+        margin: 2rem auto;
+    }
+    .auth-title {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    .auth-subtitle {
+        color: var(--text-secondary);
+        text-align: center;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+    .auth-footer {
+        margin-top: 1.5rem;
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    .auth-footer a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+    .auth-footer a:hover {
+        color: var(--primary-hover);
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="card">
+        <h2 class="auth-title">Create Account</h2>
+        <p class="auth-subtitle">Register to join the Hospital Management System</p>
+
+        <form method="post" action="{% url 'signup' %}">
+            {% csrf_token %}
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" placeholder="John" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" placeholder="Doe" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Choose a username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="john.doe@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="+1234567890">
+            </div>
+
+            <div class="form-group">
+                <label for="role">Register As</label>
+                <select id="role" name="role" class="form-control" style="background-image: none;" required>
+                    <option value="" disabled selected>Select your role...</option>
+                    <option value="patient">Patient — Search & Book Appointments</option>
+                    <option value="doctor">Doctor — Manage Availability Slots</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Create a password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.8rem;">
+                🚀 Register Account
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="{% url 'login' %}">Sign in here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
